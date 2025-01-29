@@ -1,16 +1,32 @@
 <template>
+<button  @click="showTimer=!showTimer" >
+Afficher/masquer le temps
+</button>
 
-<form action="" @submit.prevent="addTodo"  >
+<Timer v-if="showTimer"></Timer>
+<PageBone>
+<template v-slot:header>
+<!--Ici : en tête-->
+<p v-if="tasksNotDone > 0">
+  Il reste encore {{ tasksNotDone }}  tâche{{ tasksNotDone > 1 ? 's' : '' }}  à faire
+</p>
 
-    <fieldset role="group">
+</template>
+<template v-slot:aside>
+Ici sidebar
+</template>
+<template v-slot:main> 
+    <form @submit.prevent="addTodo"  >
+
+<fieldset role="group">
 <input 
 v-model="newtodo"
 type="text"
 placeholder="La tâche à effectuer"
 >
 <button 
+:disabled="newtodo.length === 0"
 
-:class="{'disabled-btn':newtodo.length===0}"
 > Ajouter une tâche</button>
 
 </fieldset>
@@ -20,16 +36,17 @@ placeholder="La tâche à effectuer"
 <div v-if="todos.length==0" > 
 Mhhh, aucune tâche à effectuer pour le moment
 </div>
-<div v-else="">
+<div v-else>
 <ul>
 
 <li 
-v-for="todo in sortedTodos()" 
+v-for="todo in sortedTodos" 
 :key="todo.date"
 :class="{'completed':todo.completed}">
 
-<input type="checkbox" v-model="todo.completed" >    
-{{ todo.title }}
+<Checkbox :label="todo.title" v-model="todo.completed" > 
+
+</Checkbox>
 </li>
 </ul>
 </div>
@@ -39,31 +56,38 @@ v-model:="hideCompleted"
 >
 Masquer les tâches complétées
 
-<div>
+    </template>
 
-</div>
+    <template v-slot:footer>
+        ici le pied de page
+        </template>
+
+</PageBone>
+
+
+
+
+
+
 </template>
 
 <script setup>
-import { ref } from 'vue';
-
-
+import { computed, onMounted, ref } from 'vue';
+import Checkbox from './components/Checkbox.vue';
+import Button from './components/Button.vue';
+import PageBone from './components/PageBone.vue';
+import Timer from './components/Timer.vue';
 const newtodo=ref('');
 const hideCompleted=ref(false);
-const todos=ref( [
-    {
-        title:'Apprendre Vue 3',
-        completed:true,
-        date:Date.now()
-    },
-    {
-        title:'Apprendre Vue Router',
-        completed:false,
-        date:Date.now()
-    }
- 
- 
-]);
+const todos=ref( []);
+const showTimer=ref(true);
+onMounted(()=> {
+    fetch('https://jsonplaceholder.typicode.com/todos')
+    .then(response=>response.json())
+    .then (valeur =>todos.value=valeur.map(todo =>({...todo, date:todo.id}) ))
+    .catch(error => console.error("Erreur lors du fetch :", error)); //en cas de pépin
+})
+
 
 const addTodo=()=>{
     todos.value.push({
@@ -74,7 +98,9 @@ const addTodo=()=>{
    newtodo.value='';
 }
 
-const sortedTodos= () => {
+const sortedTodos=computed(()  => {
+
+
     const AFiltrer =todos.value.toSorted((a,b)=>a.completed > b.completed ? 1 : -1);
 if (hideCompleted.value){
     return AFiltrer.filter(todo=>!todo.completed);
@@ -82,16 +108,15 @@ if (hideCompleted.value){
 }
 
 return AFiltrer;
-}
+});
+
+const tasksNotDone= computed(()=>todos.value.filter(task=>!task.completed).length);
 
 
 </script>
 
 <style>
-.disabled-btn {
-  cursor: not-allowed !important;
-  opacity: 0.6; /* Facultatif pour rendre visuellement désactivé */
-}
+
 
 
 .completed{
