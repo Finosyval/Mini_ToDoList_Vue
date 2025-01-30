@@ -81,12 +81,12 @@ const newtodo=ref('');
 const hideCompleted=ref(false);
 const todos=ref( []);
 const showTimer=ref(true);
-onMounted(()=> {
+/*onMounted(()=> {
     fetch('https://jsonplaceholder.typicode.com/todos')
     .then(response=>response.json())
     .then (valeur =>todos.value=valeur.map(todo =>({...todo, date:todo.id}) ))
     .catch(error => console.error("Erreur lors du fetch :", error)); //en cas de pépin
-})
+})*/
 
 
 const addTodo=()=>{
